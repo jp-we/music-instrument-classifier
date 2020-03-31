@@ -6,6 +6,8 @@ Currently supported types are cello, clarinet, flute, violin and piano. The audi
 
 Created by Ivy Zheng, Weiyuan Deng and Yuchen Rao from Northwestern University. 
 
+Changed to Python 3.7 by jp-we
+
 
 ## Dataset
 
@@ -15,7 +17,7 @@ For copyright reasons, the original data is not included in this repository.
 
 
 ## Dependencies
- - Python 2.7
+ - Python 3.7
  - NumPy
  - Scikit-Learn (sklearn)
  - Librosa
