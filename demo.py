@@ -2,11 +2,14 @@ import numpy as np
 import sklearn
 import librosa
 from sklearn import svm
-from sklearn.externals import joblib
+import joblib
 from sklearn import decomposition
 from sklearn import neighbors
 import preprocessing
 import classify
+import ffmpeg
+import matplotlib.pyplot as plt
+import librosa.display
 
 def feature_extract(audio_filename):
 
@@ -14,15 +17,15 @@ def feature_extract(audio_filename):
     window_size = 2048
     hop_size = window_size/2
     if audio_filename[5] == '1':
-        print "This instrument is cello."
+        print ("This instrument is cello.")
     elif audio_filename[5] == '2':
-        print "This instrument is clarinet."
+        print ("This instrument is clarinet.")
     elif audio_filename[5] == '3':
-        print "This instrument is flut."
+        print ("This instrument is flut.")
     elif audio_filename[5] == '4':
-        print "This instrument is violin."
+        print ("This instrument is violin.")
     elif audio_filename[5] == '5':
-        print "This instrument is piano."
+        print ("This instrument is piano.")
 
     music, sr= librosa.load(audio_filename, sr = sr)
     start_trim = preprocessing.detect_leading_silence(music)
@@ -32,33 +35,48 @@ def feature_extract(audio_filename):
     trimmed_sound = music[start_trim:duration-end_trim]
 
     mfccs = librosa.feature.mfcc(y=trimmed_sound, sr=sr)
+    #print(np.shape(mfccs))
+    #print("Jetzt kommen die mfccs:")
+    #print(mfccs[1])
+    #print(np.mean(mfccs[0]))
+   
+    plt.figure(figsize=(10, 4))
+    librosa.display.specshow(mfccs, x_axis='time')
+    plt.colorbar()
+    plt.title('MFCC')
+    plt.tight_layout()
+    plt.show()
+    
     aver = np.mean(mfccs, axis = 1)
+    #print(aver) # JP
     audio_feature = aver.reshape(20)
     return audio_feature
 
 
 def result(pre):
     if pre == 1:
-        print "The prediction of this instrument is cello."
+        print ("The prediction of this instrument is cello.")
     elif pre == 2:
-        print "The prediction of this instrument is clarinet."
+        print ("The prediction of this instrument is clarinet.")
     elif pre == 3:
-        print "The prediction of this instrument is flut."
+        print ("The prediction of this instrument is flut.")
     elif pre == 4:
-        print "The prediction of this instrument is violin."
+        print ("The prediction of this instrument is violin.")
     elif pre == 5:
-        print "The prediction of this instrument is piano."
+        print ("The prediction of this instrument is piano.")
 
 def main():
-    audio_filename = input("Please choose an audio file(test/1-10.mp3): ")
-    demo_data = feature_extract(audio_filename)
-    print 'processed data.'
+    audio_filename= "test/3_6.mp3"
+    #audio_filename = input("Please choose an audio file(test/1-10.mp3): ")
+    demo_data = feature_extract(audio_filename) # demo_data sind also jetzt die audio-features von oben
+    #print(demo_data)
+    print ('processed data.')
     model_params = {
         'pca_n': 10,
         'knn_k': 5,
         'knn_metric': 'minkowski'
     }
-    #  train_and_test(data, [model_params, 'svc'])
+    #train_and_test(data, [model_params, 'svc'])
     model = classify.load_model(model_params)
     pre = classify.predict(model, demo_data, [model_params, 'svc'])
     result(pre)

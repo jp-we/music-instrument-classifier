@@ -26,7 +26,10 @@ def feature_extract():
     data = []
 
     #read file
+    #files = glob.glob('final_data/data/*/*.mp3')
     files = glob.glob('final_data/data/*/*.mp3')
+    #print(files) #JP
+    #print(np.shape(files)) #JP
     np.random.shuffle(files)
     for filename in files:
 
@@ -62,13 +65,12 @@ def feature_extract():
         # print feature.shape
         data.append(data2)
         #data = np.vstack((data, data2))
-        # print data
     return data
 
 def main():
     data = feature_extract()
-    print data
-    print len(data)
+    print (data)
+    print (len(data))
 
 # if __name__ == '__main__':
 #     main()

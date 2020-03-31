@@ -2,43 +2,55 @@ import numpy as np
 from sklearn import svm
 from sklearn import decomposition
 from sklearn import neighbors
-from sklearn.externals import joblib
+import joblib
 
 import preprocessing
 
 
 def unpack_data(data):
-    src_names = np.array(map(lambda n: n[0], data))
-    features = np.array(map(lambda n: n[1], data))
-    labels = np.array(map(lambda n: n[2], data))
+    #src_names = np.array(map(lambda n: n[0], data))
+    src_names = np.array(list(map(lambda n: n[0], data)))
+    #print(src_names) #JP
+    #features = np.array(map(lambda n: n[1], data))
+    features = np.array(list(map(lambda n: n[1], data)))
+    #print(features) #JP
+    #labels = np.array(map(lambda n: n[2], data))
+    labels = np.array(list(map(lambda n: n[2], data)))
+    #print(labels) #JP
     return src_names, features, labels
 
 def train_and_test(data, method, cv_fold=10):
     # extract features of every images
-    fold_unit = len(data) / cv_fold
+    fold_unit = len(data) // cv_fold #JP: habier hier nen zusätzlichen / gemacht. Evl wieder löschen
     np.random.shuffle(data)
     accu_rates = []
     models = []
-    for fold in xrange(cv_fold):              ### only one trial for now
-        print 'start fold:', fold
+    for fold in range(cv_fold):              ### only one trial for now
+        print ('start fold:', fold)
+        #print(fold) #JP
+        #print(fold_unit) #JP
         train_data = data[:fold_unit*fold] + data[fold_unit*(fold+1):]
         test_data = data[fold_unit*fold:fold_unit*(fold+1)]
+        #print('Trainingsdata') #JP
+        #print(train_data) #JP
+        #print('Testdata') #JP
+        #print(test_data) #JP
         model = train(train_data, method)
-        print 'training done. start testing...'
+        print ('training done. start testing...')
         accu_rate = test(model, test_data, method)
         accu_rates.append(accu_rate)
         models.append(model)
-    print accu_rates
-    print 'average: ', np.average(accu_rates)
+    print (accu_rates)
+    print ('average: ', np.average(accu_rates))
     # cache the best model
     best = models[np.argmax(accu_rates)]
     save_model(best)
     return models, np.average(accu_rates)
-
+    #return #JP
 
 def train(data, method):
     src_names, features, labels = unpack_data(data)
-    print 'train feature vector dim:', features.shape
+    print ('train feature vector dim:', features.shape)
 
     # initialize models (not all used)
     params = method[0]
@@ -56,7 +68,7 @@ def train(data, method):
         knn.fit(features, labels)
 
     return pca, svc, knn
-
+    #return []
 
 def predict(model, features, method):
     pca, svc, knn = model
@@ -64,13 +76,18 @@ def predict(model, features, method):
     if 'pca' in method:
         features = pca.transform(features)
     if 'svc' in method:
-        predicted = svc.predict(features)
+        #predicted = svc.predict(features)
+        # Achtung: wenn man die demo laufen lässt, muss um features hier drüber noch [], damit es dim 2 ist, sonst gibt's Fehlermeldung. JP
+        if features.ndim == 1:
+            predicted = svc.predict([features])
+        if features.ndim > 1:
+            predicted = svc.predict(features)
         return predicted
     if 'knn' in method:
         predicted = knn.predict(features)
         return predicted
-    print 'error: no classification method specified'
-    return []
+    print ('error: no classification method specified')
+    return
 
 
 def test(model, data, method):
@@ -81,8 +98,8 @@ def test(model, data, method):
     test_size = src_names.shape[0]
     accuracy = (predicted == labels)
     accu_rate = np.sum(accuracy) / float(test_size)
-    print np.sum(accuracy), 'correct out of', test_size
-    print 'accuracy rate: ', accu_rate
+    print (np.sum(accuracy), 'correct out of', test_size)
+    print ('accuracy rate: ', accu_rate)
 
     # write out all the wrongly-classified samples
     wrongs = np.array([src_names, labels, predicted])
@@ -109,13 +126,13 @@ def load_model(params):
 
 def main():
     data = preprocessing.feature_extract()
-    print 'processed data.'
+    print ('processed data.')
     model_params = {
         'pca_n': 10,
         'knn_k': 5,
         'knn_metric': 'minkowski'
     }
-    # train_and_test(data, [model_params, 'svc'])
+    train_and_test(data, [model_params, 'svc'])
     model = load_model(model_params)
     test(model, data, [model_params, 'svc'])
 
